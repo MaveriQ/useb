@@ -8,8 +8,8 @@ import os
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='bert-base-uncased')
-    parser.add_argument('--task', type=str, default='AskUbuntu', choices=['all', 'AskUbuntu', 'CQADupStack', 'TwitterPara', 'SciDocs'])
+    parser.add_argument('--model', type=str, default='maveriq/morphgpt-base-200k')
+    parser.add_argument('--task', type=str, default='TwitterPara', choices=['all', 'AskUbuntu', 'CQADupStack', 'TwitterPara', 'SciDocs'])
     parser.add_argument('--output_dir', type=str, default='output')
     parser.add_argument('--save_results', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
@@ -62,6 +62,13 @@ def main(args):
         with open(outfile, 'wb') as f:
             pickle.dump(results, f)
 
-if __name__ == '__main__':
+if __name__ == '__main__':      
     args = parse_args()
-    main(args)
+
+    if args.task == 'all':
+        tasks = ['AskUbuntu', 'CQADupStack', 'TwitterPara', 'SciDocs']
+        for task in tasks:
+            args.task = task
+            main(args)
+    else:
+        main(args)
