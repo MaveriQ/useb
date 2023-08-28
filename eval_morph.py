@@ -13,19 +13,23 @@ def parse_args():
     parser.add_argument('--output_dir', type=str, default='output')
     parser.add_argument('--save_results', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--revision', type=str, default='main')
+
+    tmp_args = "--model maveriq/morphgpt-large --task all --output_dir output --save_results --overwrite".split()
     args = parser.parse_args()
     return args
 
 def main(args):
     os.makedirs(args.output_dir, exist_ok=True)
     model_dir = args.model.split('/')[-1]
-    outfile = f'{args.output_dir}/{model_dir}-{args.task}.pkl'
+    outfile = f'{args.output_dir}/{model_dir}-{args.revision}-{args.task}.pkl'
     if not args.overwrite:
         assert not os.path.exists(outfile), f'{outfile} already exists. Use --overwrite to overwrite.'
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if 'morph' in args.model:
-        tokenizer = MorphPieceBPE(model_max_length=512)
+        print('Using MorphPieceBPE')
+        tokenizer = MorphPieceBPE(ver=1.0, max_len=1024)
     else:
         tokenizer = AutoTokenizer.from_pretrained(args.model)
 
@@ -33,7 +37,7 @@ def main(args):
         print('Setting pad_token_id to eos_token_id')
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    model = AutoModel.from_pretrained(args.model).to(device)
+    model = AutoModel.from_pretrained(args.model,revision=args.revision,trust_remote_code=True).to(device)
 
     @torch.no_grad()
     def semb_fn(sentences) -> torch.Tensor:
